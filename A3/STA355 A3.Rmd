@@ -1,0 +1,178 @@
+---
+title: "STA355 A3"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Q1 b)
+
+```{r}
+air <- scan("aircon.txt")
+alpha <- c(3000:16000)/10000
+length(alpha)
+
+prenorm <- function(x,alpha) {
+  n <- length(x)
+  r <-log(1/10000)+lgamma(n*alpha+1)-n*lgamma(alpha)+alpha*sum(log(x))-
+    alpha/100-(n*alpha+1)*log(sum(x)+1/100)-sum(log(x))
+  postunnormed <- exp(r - max(r)) 
+  postunnormed
+}
+
+post <- prenorm(air,alpha)
+mult <- c(0.001,rep(1,12999),0.001)
+norm <- sum(mult*post)/10000
+post <- post/norm # normalized posterior
+plot(alpha,post,type="l",ylab="posterior density")
+abline(v=mean(air)^2/var(air),col= "red")
+```
+
+
+\newpage
+
+# Q2 a)
+```{r}
+x<-scan("stamp.txt")
+
+venter <- function(x, tau) {
+             x <- sort(x)
+             n <- length(x)
+             m <- ceiling(tau*n)
+             x1 <- x[1:(n-m+1)]
+             x2 <- x[m:n]
+             j <- c(1:(n-m+1))
+             len <- x2-x1
+             k <- min(j[len==min(len)])
+             (x[k]+x[k+m-1])/2
+             }
+
+plot(density(x))
+abline(v=venter(x,tau=0.39917))
+```
+\newline The $\tau$ need to be smaller than 0.3992 in order that the estimate "make sense".The optimal $\tau$ is approximately between 0.39917 and 0.39918.
+
+\newpage
+
+# Q2 b)
+```{r}
+set.seed(477)
+alpha2 <- 2
+alpha10 <- 10
+venter <- function(x, tau) {
+             x <- sort(x)
+             n <- length(x)
+             m <- ceiling(tau*n)
+             x1 <- x[1:(n-m+1)]
+             x2 <- x[m:n]
+             j <- c(1:(n-m+1))
+             len <- x2-x1
+             k <- min(j[len==min(len)])
+             (x[k]+x[k+m-1])/2
+}
+
+# alpah =2,tau = 0.5, n=100
+venter_est <-NULL
+n<-100
+for(i in 1:10000){
+  x<-rgamma(n=n,shape = alpha2)
+  venter_est[i] <-venter(x,0.5)
+}
+mean((venter_est - alpha2) ^2)
+
+# alpah =2,tau = 0.5, n=1000
+venter_est <- NULL
+n <- 1000
+for (i in 1:10000){
+  x <- rgamma(n = n, shape = alpha2)
+  venter_est[i] <- venter(x,0.5)
+  }
+mean((venter_est - alpha2) ^2)
+
+# alpah =2,tau = 0.1, n=100
+venter_est <- NULL
+n <- 100
+for (i in 1:10000){
+  x <- rgamma(n = n, shape = alpha2)
+  venter_est[i] <- venter(x,0.1)
+  }
+mean((venter_est - alpha2) ^2)
+
+# alpah =2,tau = 0.1, n=1000
+venter_est <- NULL
+n <- 1000
+for (i in 1:10000){
+  x <- rgamma(n = n, shape = alpha2)
+  venter_est[i] <- venter(x,0.1)
+  }
+mean((venter_est - alpha2) ^2)
+
+
+# alpah =10,tau = 0.5, n=100
+venter_est <-NULL
+n<-100
+for(i in 1:10000){
+  x<-rgamma(n=n,shape = alpha10)
+  venter_est[i] <-venter(x, 0.5)
+}
+mean((venter_est - alpha10)^2)
+
+## alpah =10,tau = 0.5, n=1000
+venter_est <- NULL
+n <- 1000
+for (i in 1:10000){
+  x <- rgamma(n = n, shape = alpha10)
+  venter_est[i] <- venter(x,0.5)
+  }
+mean((venter_est - alpha10) ^2)
+
+# alpah =10,tau = 0.1, n=100
+venter_est <- NULL
+n <- 100
+for (i in 1:10000){
+  x <- rgamma(n = n, shape = alpha10)
+  venter_est[i] <- venter(x,0.1)
+  }
+mean((venter_est - alpha10) ^2)
+
+# alpah =10,tau = 0.1, n=1000
+venter_est <- NULL
+n <- 1000
+for (i in 1:10000){
+  x <- rgamma(n = n, shape = alpha10)
+  venter_est[i] <- venter(x,0.1)
+  }
+mean((venter_est - alpha10) ^2)
+```
+The ventor estimator seems to be better with $\alpha=2$ because the MSEs of $\alpha=2$ with varies n and $\tau$ are all smaller than estimator of $\alpha=10$ with the same n and $\tau$.
+
+# Q2 c)
+```{r}
+venter <- function(x, tau=0.5) {
+  x <- sort(x)
+  n <- length(x)
+  m <- ceiling(tau*n)
+  x1 <- x[1:(n-m+1)]
+  x2 <- x[m:n]
+  j <- c(1:(n-m+1))
+  len <- x2-x1
+  k <- min(j[len==min(len)])
+  (x[k]+x[k+m-1])/2
+}
+
+y<- seq(0,3.5,0.001)
+venter_est <- NULL
+Ti<-NULL
+alpha <- 2
+n <- 50
+for (i in 1:length(y)){
+  x <- rgamma(n = n, shape = alpha)
+  Ti[i] <- sum(x)
+  venter_est[i] <- venter(x)
+  }
+
+f_hat<- function(x){
+  mean(dgamma(Ti/venter_est*(Ti/venter_est*x)^(n*alpha-1)*exp(-x*Ti/venter_est)/gamma(n*alpha),shape = alpha))
+}
+
+plot(y,sapply(y,f_hat))
+```
